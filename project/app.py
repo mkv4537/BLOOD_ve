@@ -1,4 +1,5 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
+import webbrowser
 #from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
@@ -200,7 +201,40 @@ def delete_article(id):
     cur.close()
     flash('Article Deleted', 'success')
     return redirect(url_for('dashboard'))
-
+class Bloodrequestform(Form):
+    PATIENT_NAME = StringField('Pateint Full Name', [validators.Length(min=1, max=50)])
+    BLOOD_GROUP =StringField('Blood Group', [validators.Length(min=2, max=4)])
+    PATIENT_AGE =StringField('Patient Age', [validators.Length(min=1, max=3)])
+    UNIT =StringField('How many unit you need?', [validators.Length(min=1, max=3)])
+    PHONE_NUMBER =StringField('PHONE_NUMBER', [validators.Length(min=10, max=50)])
+    HOSPITAL_NAME = StringField('Hospital Name', [validators.Length(min=1, max=50)])
+    LOCATION =StringField('Location', [validators.Length(min=1, max=500)])
+    PURPOSE =StringField('Purpose', [validators.Length(min=2, max=200)])
+@app.route('/Blood_request', methods=['GET', 'post'])
+def Blood_request():
+    form = Bloodrequestform(request.form)
+    if request.method == 'POST' and form.validate():
+        PATIENT_NAME = form.PATIENT_NAME.data
+        BLOOD_GROUP = form.BLOOD_GROUP.data
+        PATIENT_AGE = form.PATIENT_AGE.data
+        UNIT=form.UNIT.data
+        PHONE_NUMBER = form.PHONE_NUMBER.data
+        HOSPITAL_NAME = form.HOSPITAL_NAME.data
+        LOCATION = form.LOCATION.data
+        PURPOSE = form.PURPOSE.data
+        #Create DictCursor
+        cur = mysql.connection.cursor()
+        # Execute query
+        cur.execute("INSERT INTO Bl_requestS(PATEINT_NAME, BLOOD_GROUP, PATIENT_AGE, UNIT, PHONE_NUMBER, HOSPITAL_NAME, LOCATION, PURPOSE) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)", (PATIENT_NAME, BLOOD_GROUP, PATIENT_AGE, UNIT, PHONE_NUMBER, HOSPITAL_NAME, LOCATION, PURPOSE))
+        # commit to DB
+        mysql.connection.commit()
+        # Close connection
+        cur.close()
+        flash('I have sent your request to nearby you, i will find your donour soon', 'success')
+        webbrowser.open('https://web.whatsapp.com/')
+        webbrowser.open('https://mail.google.com/mail/u/0/#inbox?compose=new')
+        return redirect(url_for('login'))
+    return render_template('Blood_request_form.html', form=form)
 
 if __name__ == '__main__':
     app.secret_key='secret123'
